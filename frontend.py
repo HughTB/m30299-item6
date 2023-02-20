@@ -17,12 +17,16 @@ def setupHome():
 
 def setupWindow():
     """Sets the size, title and column sizes of the main window"""
-    mainWin.geometry("550x112")
+    mainWin.geometry("550x78")
     mainWin.resizable(False, False)
     mainWin.title("Smart Home Controller - up2157117")
     mainWin.grid_columnconfigure(0, weight=2)
     mainWin.grid_columnconfigure(1, weight=1)
     mainWin.grid_columnconfigure(2, weight=1)
+    mainWin.grid_columnconfigure(3, weight=1)
+
+def resizeWindow(numOfDevices: int):
+    mainWin.geometry(f"550x{78 + (26 * numOfDevices)}")
 
 def configureDevice(device: SmartDevice):
     """Opens a new window containing configuration settings for a SmartDevice object"""
@@ -46,6 +50,7 @@ def configureDevice(device: SmartDevice):
         lblOption.configure(text="Wash Mode: ")
 
     def submit():
+        """Internal function to submit new values entered into the configuration window, into different attributes depending upon the class"""
         if isinstance(device, SmartPlug):
             device.setConsumptionRate(int(entOption.get()))
         elif isinstance(device, SmartWashingMachine):
@@ -74,14 +79,13 @@ def updateWidgets():
 
 def setupWidgets():
     """Creates the widgets for all devices in the smartHome object"""
-    lblTitle = Label(mainWin, text="Smart Home", font=("Segoe UI", 18))
-    lblTitle.grid(row=0, column=0, columnspan=2)
-
     def buttonTurnOn():
+        """Internal function, turns all devices on and then updates the window"""
         smartHome.turnOnAll()
         updateWidgets()
 
     def buttonTurnOff():
+        """Internal function, turns all devices off and then updates the window"""
         smartHome.turnOffAll()
         updateWidgets()
 
@@ -92,14 +96,16 @@ def setupWidgets():
     btnAllOn.grid(row=2, column=0, padx=2, sticky="w")
 
     numOfDevices = len(smartHome.getDevices())
-    mainWin.geometry(f"550x{112 + (26 * numOfDevices)}")
+    resizeWindow(numOfDevices)
 
     for i in range(0, numOfDevices):
-        def toggleThis(index=i):
+        def toggleThis(index = i):
+            """Internal function that toggles the device at index i in the array of SmartHome devices"""
             smartHome.toggleSwitch(index)
             updateWidgets()
 
-        def configThis(index=i):
+        def configThis(index = i):
+            """Internal function that opens a new configuration window for the device at index i"""
             configureDevice(smartHome.getDeviceAt(index))
             updateWidgets()
 

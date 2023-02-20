@@ -85,7 +85,10 @@ class SmartHome():
         """Appends a new device to the list of smart devices"""
         self.devices.append(device)
 
-    def toggleSwitch(self, index):
+    def removeDevice(self, index: int):
+        self.devices.pop(index)
+
+    def toggleSwitch(self, index: int):
         """Toggles the switch of the device at the specified index in the list of smart devices"""
         self.devices[index].toggleSwitch()
 
@@ -143,9 +146,10 @@ def testSmartHome():
     smartHome.turnOnAll()
     print(smartHome)
 
+print("=== Backend Tests ===")
 print("=== Smart Plug ===")
 testSmartPlug()
-print("=== Washing Machine (Custom Device) ===")
+print("=== Smart Washing Machine (Custom Device) ===")
 testSmartWashingMachine()
 print("=== Smart Home ===")
 testSmartHome()
