@@ -7,7 +7,7 @@ class SmartDevice():
     def toggleSwitch(self):
         """Toggles the property switchedOn between true and false"""
         self.switchedOn = not self.switchedOn
-    
+
     def getSwitchedOn(self):
         """Returns the value of switchedOn"""
         return self.switchedOn
@@ -25,11 +25,11 @@ class SmartPlug(SmartDevice):
         text += "on, " if self.switchedOn else "off, "
         text += f"consumption rate: {self.consumptionRate}"
         return text
-    
+
     def getConsumptionRate(self):
         """Returns the value of consumptionRate"""
         return self.consumptionRate
-    
+
     def setConsumptionRate(self, newConsumptionRate: int):
         """Sets the value of consumptionRate, ensuring it is in the range 0-150"""
         if newConsumptionRate >= 0 and newConsumptionRate <= 150:
@@ -38,7 +38,8 @@ class SmartPlug(SmartDevice):
 washModes = ["Daily wash", "Quick wash", "Eco"]
 
 class SmartWashingMachine(SmartDevice):
-    """SmartWashingMachine, inhertis from SmartDevice. Contains methods and properties that a smart washing machine may need to function"""
+    """SmartWashingMachine, inherits from SmartDevice. Contains methods and properties that a smart washing machine
+    may need to function"""
     def __init__(self):
         """Constructor, sets washMode to "Daily wash" by default"""
         super().__init__()
@@ -50,11 +51,11 @@ class SmartWashingMachine(SmartDevice):
         text += "on, " if self.switchedOn else "off, "
         text += f"wash mode: {self.washMode}"
         return text
-    
+
     def getWashMode(self):
         """Returns the value of washMode"""
         return self.washMode
-    
+
     def setWashMode(self, newWashMode):
         """Sets the value of washMode, ensuring it is a valid wash mode, as specified in washModes"""
         if newWashMode in washModes:
@@ -76,11 +77,20 @@ class SmartHome():
     def getDevices(self):
         """Returns an array of devices in the smart home"""
         return self.devices
-    
+
     def getDeviceAt(self, index: int):
         """Returns the device at the specified index in the array devices"""
         return self.devices[index]
     
+    def getTurnedOnDevices(self):
+        turnedOnDevices = 0
+
+        for device in self.devices:
+            if device.getSwitchedOn():
+                turnedOnDevices += 1
+
+        return turnedOnDevices
+
     def addDevice(self, device: SmartDevice):
         """Appends a new device to the list of smart devices"""
         self.devices.append(device)
@@ -97,7 +107,7 @@ class SmartHome():
         for device in self.devices:
             if not device.getSwitchedOn():
                 device.toggleSwitch()
-    
+
     def turnOffAll(self):
         """Turns off all smart devices in the device list"""
         for device in self.devices:

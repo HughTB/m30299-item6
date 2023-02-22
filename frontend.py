@@ -4,8 +4,8 @@ from tkinter import *;
 smartHome = SmartHome()
 mainWin = Tk()
 deviceTexts = []
-turnedOnDevices = 0
-lblCount = Label(mainWin, text=f"{turnedOnDevices} devices turned on")
+lblCount = Label(mainWin, text=f"{smartHome.getTurnedOnDevices()} devices turned on")
+btnAddDevice = Button(mainWin, text="Add Device")
 
 def setupHome():
     """Creates and adds devices to the smartHome object"""
@@ -17,7 +17,7 @@ def setupHome():
 
 def setupWindow():
     """Sets the size, title and column sizes of the main window"""
-    mainWin.geometry("550x78")
+    resizeWindow()
     mainWin.resizable(False, False)
     mainWin.title("Smart Home Controller - up2157117")
     mainWin.grid_columnconfigure(0, weight=2)
@@ -25,8 +25,78 @@ def setupWindow():
     mainWin.grid_columnconfigure(2, weight=1)
     mainWin.grid_columnconfigure(3, weight=1)
 
-def resizeWindow(numOfDevices: int):
-    mainWin.geometry(f"550x{78 + (26 * numOfDevices)}")
+def resizeWindow():
+    """Resizes the main window to fit new devices, and moves lblCount and btnAddDevice to the bottom-most row"""
+    mainWin.geometry(f"600x{78 + (26 * len(smartHome.getDevices()))}")
+    lblCount.grid(row=(4 + len(smartHome.getDevices())), column=0, padx=2, sticky="w")
+    btnAddDevice.grid(row=(4 + len(smartHome.getDevices())), column=3)
+
+def addDevice():
+    """Opens a new window for user input to add a new device to the SmartHome object"""
+    addDeviceWin = Toplevel()
+    addDeviceWin.geometry("300x57")
+    addDeviceWin.resizable(False, False)
+    addDeviceWin.title("Add New Device")
+    addDeviceWin.grid_columnconfigure(0, weight=1)
+    addDeviceWin.grid_columnconfigure(1, weight=1)
+
+    deviceOptions = ["Smart Plug", "Smart Washing Machine"]
+
+    selected = StringVar()
+    selected.set("Smart Plug")
+
+    optDeviceType = OptionMenu(addDeviceWin, selected, *deviceOptions)
+    optDeviceType.grid(row=0, column=0, columnspan=2)
+
+    def submit():
+        if selected.get() == "Smart Plug":
+            smartHome.addDevice(SmartPlug())
+        elif selected.get() == "Smart Washing Machine":
+            smartHome.addDevice(SmartWashingMachine())
+
+        setupDeviceWidgets(len(smartHome.getDevices()) - 1)
+        resizeWindow()
+        addDeviceWin.destroy()
+
+    btnCancel = Button(addDeviceWin, text="Cancel", command=addDeviceWin.destroy)
+    btnCancel.grid(row=1, column=0)
+
+    btnSubmit = Button(addDeviceWin, text="Submit", command=submit)
+    btnSubmit.grid(row=1, column=1)
+
+def setupDeviceWidgets(index: int):
+    """Add the widgets necessary for each device, given their index in the list of smartHome's devices"""
+    def toggleThis():
+        smartHome.toggleSwitch(index)
+        updateWidgets()
+
+    def configThis():
+        configureDevice(smartHome.getDeviceAt(index))
+        updateWidgets()
+
+    def removeThis():
+        smartHome.removeDevice(index)
+
+        for widget in mainWin.grid_slaves(row=(3 + index)):
+            widget.grid_remove()
+
+        deviceTexts.pop(index)
+        resizeWindow()
+
+    txtDevice = Text(mainWin, height=1, width=50)
+    txtDevice.insert("1.0", str(smartHome.getDeviceAt(index)))
+    txtDevice.grid(row=(3 + index), column=0)
+
+    deviceTexts.append(txtDevice)
+
+    btnToggle = Button(mainWin, text="Toggle this", command=toggleThis)
+    btnToggle.grid(row=(3 + index), column=1)
+
+    btnConfig = Button(mainWin, text="Configure", command=configThis)
+    btnConfig.grid(row=(3 + index), column=2)
+
+    btnDelete = Button(mainWin, text="Remove", command=removeThis)
+    btnDelete.grid(row=(3 + index), column=3)
 
 def configureDevice(device: SmartDevice):
     """Opens a new window containing configuration settings for a SmartDevice object"""
@@ -50,7 +120,6 @@ def configureDevice(device: SmartDevice):
         lblOption.configure(text="Wash Mode: ")
 
     def submit():
-        """Internal function to submit new values entered into the configuration window, into different attributes depending upon the class"""
         if isinstance(device, SmartPlug):
             device.setConsumptionRate(int(entOption.get()))
         elif isinstance(device, SmartWashingMachine):
@@ -67,15 +136,11 @@ def configureDevice(device: SmartDevice):
 
 def updateWidgets():
     """Updates the list of devices shown in the main window"""
-    turnedOnDevices = 0
-
     for i in range(0, len(deviceTexts)):
         deviceTexts[i].delete("1.0", END)
         deviceTexts[i].insert("1.0", str(smartHome.getDeviceAt(i)))
-        if smartHome.getDeviceAt(i).getSwitchedOn():
-            turnedOnDevices += 1
 
-    lblCount.configure(text=f"{turnedOnDevices} devices turned on")
+    lblCount.configure(text=f"{smartHome.getTurnedOnDevices()} devices turned on")
 
 def setupWidgets():
     """Creates the widgets for all devices in the smartHome object"""
@@ -95,33 +160,12 @@ def setupWidgets():
     btnAllOn = Button(mainWin, text="Turn all on", command=buttonTurnOn)
     btnAllOn.grid(row=2, column=0, padx=2, sticky="w")
 
-    numOfDevices = len(smartHome.getDevices())
-    resizeWindow(numOfDevices)
+    for i in range(0, len(smartHome.getDevices())):
+        setupDeviceWidgets(i)
 
-    for i in range(0, numOfDevices):
-        def toggleThis(index = i):
-            """Internal function that toggles the device at index i in the array of SmartHome devices"""
-            smartHome.toggleSwitch(index)
-            updateWidgets()
+    btnAddDevice.configure(command=addDevice)
 
-        def configThis(index = i):
-            """Internal function that opens a new configuration window for the device at index i"""
-            configureDevice(smartHome.getDeviceAt(index))
-            updateWidgets()
-
-        txtDevice = Text(mainWin, height=1, width=50)
-        txtDevice.insert("1.0", str(smartHome.getDeviceAt(i)))
-        txtDevice.grid(row=(3 + i), column=0)
-
-        deviceTexts.append(txtDevice)
-
-        btnToggle = Button(mainWin, text="Toggle this", command=toggleThis)
-        btnToggle.grid(row=(3 + i), column=1)
-
-        btnConfig = Button(mainWin, text="Configure", command=configThis)
-        btnConfig.grid(row=(3 + i), column=2)
-
-    lblCount.grid(row=(4 + numOfDevices), column=0, padx=2, sticky="w")
+    resizeWindow()
 
 def main():
     """Entry point for the application"""
