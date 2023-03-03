@@ -73,6 +73,8 @@ def removeDevice(index):
 
     for i in range(0, len(deviceWidgets)):
         deviceWidgets[i][3].configure(command=lambda index=i : removeDevice(index))
+        for j in range(0, len(deviceWidgets[i])):
+            deviceWidgets[i][j].grid(row=(2 + i))
 
     resizeWindow()
     updateWidgets()
