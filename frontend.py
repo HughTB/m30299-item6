@@ -16,8 +16,7 @@ def setupHome():
     smartHome.addDevice(SmartWashingMachine())
 
 def setupWindow():
-    """Sets the size, title and column sizes of the main window"""
-    resizeWindow()
+    """Sets the title and column sizes of the main window"""
     mainWin.resizable(False, False)
     mainWin.title("Smart Home Controller - up2157117")
     mainWin.grid_columnconfigure(0, weight=2)
@@ -28,8 +27,8 @@ def setupWindow():
 def resizeWindow():
     """Resizes the main window to fit new devices, and moves lblCount and btnAddDevice to the bottom-most row"""
     mainWin.geometry(f"600x{78 + (26 * len(smartHome.getDevices()))}")
-    lblCount.grid(row=(4 + len(smartHome.getDevices())), column=0, padx=2, sticky="w")
-    btnAddDevice.grid(row=(4 + len(smartHome.getDevices())), column=3)
+    lblCount.grid(row=100, column=0, padx=2, sticky="w")
+    btnAddDevice.grid(row=100, column=3)
 
 def addDevice():
     """Opens a new window for user input to add a new device to the SmartHome object"""
@@ -64,6 +63,20 @@ def addDevice():
     btnSubmit = Button(addDeviceWin, text="Submit", command=submit)
     btnSubmit.grid(row=1, column=1)
 
+def removeDevice(index):
+    """Removes the device at the specified index from both the interface, and the smartHome object"""
+    for widget in deviceWidgets[index]:
+        widget.grid_remove()
+
+    smartHome.removeDevice(index)
+    deviceWidgets.pop(index)
+
+    for i in range(0, len(deviceWidgets)):
+        deviceWidgets[i][3].configure(command=lambda index=i : removeDevice(index))
+
+    resizeWindow()
+    updateWidgets()
+
 def setupDeviceWidgets(index: int):
     """Add the widgets necessary for each device, given their index in the list of smartHome's devices"""
     def toggleThis():
@@ -74,27 +87,18 @@ def setupDeviceWidgets(index: int):
         configureDevice(smartHome.getDeviceAt(index))
         updateWidgets()
 
-    def removeThis():
-        smartHome.removeDevice(index)
-
-        for widget in mainWin.grid_slaves(row=(3 + index)):
-            widget.grid_remove()
-
-        deviceWidgets.pop(index)
-        resizeWindow()
-
     txtDevice = Text(mainWin, height=1, width=50)
     txtDevice.insert("1.0", str(smartHome.getDeviceAt(index)))
-    txtDevice.grid(row=(3 + index), column=0)
+    txtDevice.grid(row=(2 + index), column=0)
 
     btnToggle = Button(mainWin, text="Toggle this", command=toggleThis)
-    btnToggle.grid(row=(3 + index), column=1)
+    btnToggle.grid(row=(2 + index), column=1)
 
     btnConfig = Button(mainWin, text="Configure", command=configThis)
-    btnConfig.grid(row=(3 + index), column=2)
+    btnConfig.grid(row=(2 + index), column=2)
 
-    btnDelete = Button(mainWin, text="Remove", command=removeThis)
-    btnDelete.grid(row=(3 + index), column=3)
+    btnDelete = Button(mainWin, text="Remove", command=lambda i=index : removeDevice(i))
+    btnDelete.grid(row=(2 + index), column=3)
 
     widgets = [txtDevice, btnToggle, btnConfig, btnDelete]
     deviceWidgets.append(widgets)
@@ -159,10 +163,10 @@ def setupWidgets():
         updateWidgets()
 
     btnAllOff = Button(mainWin, text="Turn all off", command=buttonTurnOff)
-    btnAllOff.grid(row=1, column=0, padx=2, sticky="w")
+    btnAllOff.grid(row=0, column=0, padx=2, sticky="w")
 
     btnAllOn = Button(mainWin, text="Turn all on", command=buttonTurnOn)
-    btnAllOn.grid(row=2, column=0, padx=2, sticky="w")
+    btnAllOn.grid(row=1, column=0, padx=2, sticky="w")
 
     for i in range(0, len(smartHome.getDevices())):
         setupDeviceWidgets(i)
